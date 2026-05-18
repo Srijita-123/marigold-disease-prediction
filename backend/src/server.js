@@ -12,8 +12,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const UPLOADS_DIR = path.join(ROOT, "uploads");
 const HISTORY_PATH = path.join(ROOT, "history.json");
-const ML_URL = process.env.ML_URL || "http://127.0.0.1:8000";
-const PORT = process.env.PORT || 3001;
+const SKIP_ML = process.env.SKIP_ML === "1" || /^true$/i.test(process.env.SKIP_ML || "");
+const ML_URL = SKIP_ML ? null : process.env.ML_URL || "http://127.0.0.1:8000";
+const PORT = parseInt(process.env.PORT || "3001", 10);
+const HOST = process.env.HOST || "0.0.0.0";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/jpg"]);
 
@@ -63,7 +65,17 @@ function formatConfidence(confidence) {
   return `${Math.round(pct)}%`;
 }
 
+app.get("/", (_req, res) => {
+  res.send(
+    "Marigold Disease Backend is running. Use /api/health for health checks and /api/predict for predictions."
+  );
+});
+
 app.get("/api/health", async (_req, res) => {
+  if (SKIP_ML) {
+    return res.json({ backend: "ok", ml: { status: "disabled", model_loaded: false } });
+  }
+
   try {
     const mlRes = await fetch(`${ML_URL}/health`);
     const ml = await mlRes.json();
@@ -91,18 +103,30 @@ app.post("/api/predict", upload.single("image"), async (req, res) => {
       contentType: req.file.mimetype,
     });
 
-    const mlRes = await fetch(`${ML_URL}/predict`, {
-      method: "POST",
-      body: form,
-      headers: form.getHeaders(),
-    });
+    let prediction;
 
-    if (!mlRes.ok) {
-      const err = await mlRes.json().catch(() => ({ detail: mlRes.statusText }));
-      return res.status(mlRes.status).json({ error: err.detail || "ML prediction failed" });
+    if (SKIP_ML) {
+      prediction = {
+        disease_name: "Healthy",
+        confidence: 0.72,
+        is_healthy: true,
+        details: "Mock prediction mode enabled; ML model disabled.",
+      };
+    } else {
+      const mlRes = await fetch(`${ML_URL}/predict`, {
+        method: "POST",
+        body: form,
+        headers: form.getHeaders(),
+      });
+
+      if (!mlRes.ok) {
+        const err = await mlRes.json().catch(() => ({ detail: mlRes.statusText }));
+        return res.status(mlRes.status).json({ error: err.detail || "ML prediction failed" });
+      }
+
+      prediction = await mlRes.json();
     }
 
-    const prediction = await mlRes.json();
     const entry = {
       id: uuidv4(),
       thumbnail: `uploads/${req.file.filename}`,
@@ -125,6 +149,12 @@ app.post("/api/predict", upload.single("image"), async (req, res) => {
   }
 });
 
+app.use((req, res) => {
+  res.send(
+    "Marigold Disease Backend is running. Use /api/health for health checks and /api/predict for predictions."
+  );
+});
+
 app.use((err, _req, res, _next) => {
   if (err instanceof multer.MulterError || err.message?.includes("JPG")) {
     return res.status(400).json({ error: err.message });
@@ -132,8 +162,10 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: err.message || "Server error" });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Backend running on http://${HOST}:${PORT}`);
+  console.log(`SKIP_ML=${SKIP_ML}`);
+  console.log(`ML_URL=${ML_URL}`);
 });
 
 server.on("error", (err) => {
