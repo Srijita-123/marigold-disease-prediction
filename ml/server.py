@@ -123,7 +123,7 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
+@app.get("/api/health")
 async def health():
     report_path = Path(__file__).parent / "training_report.json"
     report = None
