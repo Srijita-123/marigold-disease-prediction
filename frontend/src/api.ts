@@ -1,6 +1,6 @@
 import type { HealthStatus, HistoryEntry, PredictionResult } from "./types";
 
-const BASE_URL = "https://marigold-disease-backend.onrender.com";
+const BASE_URL = "https://marigold-disease-pred.onrender.com";
 
 export async function predictImage(file: File): Promise<PredictionResult> {
   const form = new FormData();
