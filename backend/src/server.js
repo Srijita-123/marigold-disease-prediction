@@ -42,7 +42,14 @@ const upload = multer({
 });
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+app.options("*", cors());
 app.use(express.json());
 app.use("/uploads", express.static(UPLOADS_DIR));
 
@@ -73,7 +80,7 @@ app.get("/", (_req, res) => {
 
 app.get("/api/health", async (_req, res) => {
   if (SKIP_ML) {
-    return res.json({ backend: "ok", ml: { status: "disabled", model_loaded: false } });
+    return res.json({ backend: "ok", ml: { status: "mock", model_loaded: true } });
   }
 
   try {

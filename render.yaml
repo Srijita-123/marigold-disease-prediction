@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: marigold-disease-backend
+    name: marigold-disease-prediction-backendd
     env: node
     plan: free
     root: backend
@@ -11,3 +11,14 @@ services:
     envVars:
       - key: SKIP_ML
         value: "true"
+  - type: static
+    name: marigold-disease-frontend
+    env: static
+    plan: free
+    root: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: "https://marigold-disease-prediction-backendd.onrender.com"
