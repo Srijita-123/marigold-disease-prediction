@@ -1,6 +1,6 @@
 import type { HealthStatus, HistoryEntry, PredictionResult } from "./types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://marigold-disease-prediction-backendd.onrender.com";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://marigold-disease-prediction-back.onrender.com";
 
 export async function predictImage(file: File): Promise<PredictionResult> {
   const form = new FormData();
