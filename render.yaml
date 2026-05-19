@@ -21,4 +21,4 @@ services:
     autoDeploy: true
     envVars:
       - key: VITE_API_BASE_URL
-        value: "https://marigold-disease-prediction-back.onrender.com"
+        value: "https://marigold-disease-backend-2mb2.onrender.com"

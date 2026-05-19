@@ -44,7 +44,14 @@ const upload = multer({
 const app = express();
 app.use(
   cors({
-    origin: "*",
+    origin: [
+      "https://extraordinary-kelpie-d80d19.netlify.app",
+      "https://marigold-disease-backend-2mb2.onrender.com",
+      "https://marigold-disease-prediction-back.onrender.com",
+      "https://marigold-disease-prediction-backendd.onrender.com",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+    ],
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept", "Origin"],
   })
